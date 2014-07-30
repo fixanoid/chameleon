@@ -18,7 +18,8 @@ var ALL_URLS = { urls: ['http://*/*', 'https://*/*'] },
 
 var tabData = require('../lib/tabdata'),
 	sendMessage = require('../lib/content_script_utils').sendMessage,
-	utils = require('../lib/utils');
+	utils = require('../lib/utils'),
+	storage = require('../lib/storage');
 
 // TODO https://developer.chrome.com/extensions/webRequest#life_cycle_footnote
 // The following headers are currently not provided to the onBeforeSendHeaders event.

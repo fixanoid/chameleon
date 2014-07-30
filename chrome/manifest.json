@@ -47,7 +47,8 @@
 		"https://*/*",
 		"webNavigation",
 		"webRequest",
-		"webRequestBlocking"
+		"webRequestBlocking",
+		"storage"
 	],
 	"web_accessible_resources": [
 		"js/builds/injected.min.js"
