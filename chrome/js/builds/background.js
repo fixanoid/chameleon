@@ -1,6 +1,4 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-
-},{}],2:[function(require,module,exports){
 /*!
  * Chameleon
  *
@@ -21,7 +19,8 @@ var ALL_URLS = { urls: ['http://*/*', 'https://*/*'] },
 
 var tabData = require('../lib/tabdata'),
 	sendMessage = require('../lib/content_script_utils').sendMessage,
-	utils = require('../lib/utils');
+	utils = require('../lib/utils'),
+	storage = require('../lib/storage');
 
 // TODO https://developer.chrome.com/extensions/webRequest#life_cycle_footnote
 // The following headers are currently not provided to the onBeforeSendHeaders event.
@@ -229,7 +228,7 @@ chrome.webNavigation.onCommitted.addListener(onNavigation);
 // TODO switch to chrome.alarms?
 setInterval(tabData.clean, 300000);
 
-},{"../lib/content_script_utils":3,"../lib/tabdata":4,"../lib/utils":5}],3:[function(require,module,exports){
+},{"../lib/content_script_utils":2,"../lib/storage":3,"../lib/tabdata":4,"../lib/utils":5}],2:[function(require,module,exports){
 /*!
  * Chameleon
  *
@@ -274,6 +273,31 @@ module.exports.sendMessage = function (name, message, callback) {
 	chrome.runtime.sendMessage.apply(chrome.runtime, args);
 };
 
+},{}],3:[function(require,module,exports){
+/*!
+ * Chameleon
+ *
+ * Copyright 2014 fixanoid.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ */
+
+// TODO: using storage permission may be an overkill -- localStorage should be enuf?
+var storage = chrome.storage.local;
+
+function get(key, callback) {
+	storage.get(key, callback);
+}
+
+function set(o) {
+	storage.set(o);
+}
+
+module.exports.set = set;
+module.exports.get = get;
 },{}],4:[function(require,module,exports){
 /*!
  * Chameleon
@@ -369,4 +393,4 @@ module.exports.getAccessCount = function (counts) {
 	return Object.keys(props).length;
 };
 
-},{}]},{},[2])
+},{}]},{},[1])

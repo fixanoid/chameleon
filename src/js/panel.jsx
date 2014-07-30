@@ -60,6 +60,10 @@ var PanelApp = React.createClass({
 		}.bind(this));
 	},
 
+	whitelist: function(e) {
+		this.refs.footer.animate();
+	},
+
 	render: function () {
 		return (
 			<div>
@@ -71,6 +75,33 @@ var PanelApp = React.createClass({
 				<Report
 					counts={this.state.counts}
 					fontEnumeration={this.state.fontEnumeration} />
+				<hr />
+				<Footer
+					ref="footer"
+					whitelist={this.whitelist}/>
+			</div>
+		);
+	}
+});
+
+var Footer = React.createClass({
+	label: 'Whitelist Site',
+
+	animate: function () {
+		this.label = 'Remove from whitelist';
+		var el = this.refs.whitelistButton.getDOMNode();
+
+		el.textContent = this.label;
+	},
+
+	render: function() {
+		return (
+			<div>
+				<div id="footer-contents">
+					<button ref="whitelistButton" onClick={this.props.whitelist}>
+						{this.label}
+					</button>
+				</div>
 			</div>
 		);
 	}
