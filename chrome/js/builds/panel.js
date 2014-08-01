@@ -64,7 +64,7 @@ var PanelApp = React.createClass({displayName: 'PanelApp',
 		}.bind(this));
 	},
 
-	whitelist: function(e) {
+	whitelist: function() {
 		sendMessage('whitelist', function () {
 			this.setState({
 				whitelisted: !this.state.whitelisted
