@@ -111,6 +111,12 @@ var Footer = React.createClass({displayName: 'Footer',
 	},
 
 	render: function() {
+		if (this.props.hasOwnProperty('whitelisted') && !this.props.whitelisted) {
+			this.label = 'Whitelist site';
+		} else {
+			this.label = 'Remove from whitelist';
+		}
+
 		return (
 			React.DOM.div(null, 
 				React.DOM.div({id: "footer-contents"}, 

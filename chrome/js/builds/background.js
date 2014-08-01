@@ -134,11 +134,15 @@ function getCurrentTab(callback) {
 	});
 }
 
-function getPanelData(tab_id) {
+function getPanelData(tab_id, url) {
+	url = url.replace(/http(s)?:\/\//,'');
+	url = url.substr(0, url.indexOf('/'));
+
 	return _.extend(
 		{
 			counts: {},
 			enabled: ENABLED,
+			whitelisted: (whitelist.indexOf(url) >= 0),
 			fontEnumeration: false
 		},
 		tabData.get(tab_id)
@@ -170,7 +174,7 @@ function onMessage(request, sender, sendResponse) {
 	} else if (request.name == 'panelLoaded') {
 		// TODO fails when inspecting popup: we send inspector tab instead
 		getCurrentTab(function (tab) {
-			sendResponse(getPanelData(tab.id));
+			sendResponse(getPanelData(tab.id, tab.url));
 		});
 
 		// we will send the response asynchronously
@@ -179,6 +183,7 @@ function onMessage(request, sender, sendResponse) {
 	} else if (request.name == 'panelToggle') {
 		ENABLED = !ENABLED;
 		updateButton();
+
 	} else if (request.name == 'whitelist') {
 		getCurrentTab(function (tab) {
 			var url = tab.url.replace(/http(s)?:\/\//,'');
