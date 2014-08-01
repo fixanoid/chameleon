@@ -176,6 +176,19 @@ function onMessage(request, sender, sendResponse) {
 	} else if (request.name == 'panelToggle') {
 		ENABLED = !ENABLED;
 		updateButton();
+	} else if (request.name == 'whitelist') {
+		getCurrentTab(function (tab) {
+			var url = tab.url.replace(/http(s)?:\/\//,'');
+			url = url.substr(0, url.indexOf('/'));
+
+			if (whitelist.indexOf(url) < 0) {
+				whitelist.push(url);
+			} else {
+				whitelist.splice(whitelist.indexOf(url), 1);
+			}
+
+			storage.set({'settings': {'whitelist': whitelist}});
+		});
 	}
 
 	sendResponse(response);
@@ -194,6 +207,13 @@ function onNavigation(details) {
 }
 
 function onBeforeNavigation(details) {
+	var tab_id = details.tabId;
+
+	// top-level page navigation only
+	if (details.frameId !== 0 || tab_id < 1) {
+		return;
+	}
+
 	var url;
 
 	if (details.url) {
@@ -204,7 +224,7 @@ function onBeforeNavigation(details) {
 		if (whitelist.indexOf(url) >= 0) {
 			// reset whitelisted tabs.
 			whitelistedTab = [];
-			whitelistedTab.push( details.tabId );
+			whitelistedTab.push( tab_id );
 		}
 	}
 }

@@ -25,6 +25,7 @@ var PanelApp = React.createClass({displayName: 'PanelApp',
 		return {
 			// TODO do we need a "loading" prop?
 			enabled: false,
+			whitelisted: false,
 			fontEnumeration: false,
 			counts: {}
 		};
@@ -64,7 +65,13 @@ var PanelApp = React.createClass({displayName: 'PanelApp',
 	},
 
 	whitelist: function(e) {
-		this.refs.footer.animate();
+		sendMessage('whitelist', function () {
+			this.setState({
+				whitelisted: !this.state.whitelisted
+			}, function () {
+				this.refs.footer.animate();
+			});
+		}.bind(this));
 	},
 
 	render: function () {
@@ -81,6 +88,7 @@ var PanelApp = React.createClass({displayName: 'PanelApp',
 				React.DOM.hr(null), 
 				Footer({
 					ref: "footer", 
+					whitelisted: this.state.whitelisted, 
 					whitelist: this.whitelist})
 			)
 		);
@@ -91,7 +99,12 @@ var Footer = React.createClass({displayName: 'Footer',
 	label: 'Whitelist Site',
 
 	animate: function () {
-		this.label = 'Remove from whitelist';
+		if (this.props.whitelisted) {
+			this.label = 'Remove from whitelist';
+		} else {
+			this.label = 'Whitelist site';
+		}
+
 		var el = this.refs.whitelistButton.getDOMNode();
 
 		el.textContent = this.label;
