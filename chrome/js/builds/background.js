@@ -1,4 +1,6 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+
+},{}],2:[function(require,module,exports){
 /*!
  * Chameleon
  *
@@ -15,7 +17,9 @@
 var _ = require('underscore');
 
 var ALL_URLS = { urls: ['http://*/*', 'https://*/*'] },
-	ENABLED = true;
+	ENABLED = true,
+	whitelist = [],
+	whitelistedTab = [];
 
 var tabData = require('../lib/tabdata'),
 	sendMessage = require('../lib/content_script_utils').sendMessage,
@@ -192,7 +196,36 @@ function onNavigation(details) {
 	updateBadge(tab_id);
 }
 
+function onBeforeNavigation(details) {
+	var url;
+
+	if (details.url) {
+		url = details.url;
+		url = url.replace(/http(s)?:\/\//,'');
+		url = url.substr(0, url.indexOf('/'));
+
+		if (whitelist.indexOf(url) >= 0) {
+			// reset whitelisted tabs.
+			whitelistedTab = [];
+			whitelistedTab.push( details.tabId );
+		}
+	}
+}
+
 // initialization //////////////////////////////////////////////////////////////
+
+// storage.set({'settings': {whitelist: ['gmail.com', 'github.com']}});
+// load whitelist
+storage.get(
+	'settings',
+	function(o) {
+		if (!o) {
+			return;
+		}
+
+		whitelist = o.settings.whitelist;
+	}
+);
 
 // TODO filter out known fingerprinters
 //chrome.webRequest.onBeforeRequest.addListener(
@@ -205,7 +238,15 @@ function onNavigation(details) {
 chrome.webRequest.onBeforeRequest.addListener(
 	// we redirect to a blank script instead of simply cancelling the request
 	// because cancelling makes pages spin forever for some reason
-	function () { if (!ENABLED) { return { redirectUrl: 'data:text/javascript,' }; } },
+	function (details) {
+		if (whitelistedTab.indexOf(details.tabId) >= 0) {
+			return { redirectUrl: 'data:text/javascript,' };
+		}
+
+		if (!ENABLED) {
+			return { redirectUrl: 'data:text/javascript,' };
+		}
+	},
 	{ urls: ['chrome-extension://' + chrome.runtime.id + '/js/builds/injected.min.js'] },
 	["blocking"]
 );
@@ -224,11 +265,13 @@ chrome.tabs.onRemoved.addListener(tabData.clear);
 
 chrome.webNavigation.onCommitted.addListener(onNavigation);
 
+chrome.webNavigation.onBeforeNavigate.addListener(onBeforeNavigation);
+
 // see if we have any orphan data every five minutes
 // TODO switch to chrome.alarms?
 setInterval(tabData.clean, 300000);
 
-},{"../lib/content_script_utils":2,"../lib/storage":3,"../lib/tabdata":4,"../lib/utils":5}],2:[function(require,module,exports){
+},{"../lib/content_script_utils":3,"../lib/storage":4,"../lib/tabdata":5,"../lib/utils":6}],3:[function(require,module,exports){
 /*!
  * Chameleon
  *
@@ -273,7 +316,7 @@ module.exports.sendMessage = function (name, message, callback) {
 	chrome.runtime.sendMessage.apply(chrome.runtime, args);
 };
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /*!
  * Chameleon
  *
@@ -298,7 +341,7 @@ function set(o) {
 
 module.exports.set = set;
 module.exports.get = get;
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 /*!
  * Chameleon
  *
@@ -366,7 +409,7 @@ var tabData = {
 
 module.exports = tabData;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /*!
  * Chameleon
  *
@@ -393,4 +436,4 @@ module.exports.getAccessCount = function (counts) {
 	return Object.keys(props).length;
 };
 
-},{}]},{},[1])
+},{}]},{},[2])

@@ -14,7 +14,9 @@
 var _ = require('underscore');
 
 var ALL_URLS = { urls: ['http://*/*', 'https://*/*'] },
-	ENABLED = true;
+	ENABLED = true,
+	whitelist = [],
+	whitelistedTab = [];
 
 var tabData = require('../lib/tabdata'),
 	sendMessage = require('../lib/content_script_utils').sendMessage,
@@ -191,7 +193,36 @@ function onNavigation(details) {
 	updateBadge(tab_id);
 }
 
+function onBeforeNavigation(details) {
+	var url;
+
+	if (details.url) {
+		url = details.url;
+		url = url.replace(/http(s)?:\/\//,'');
+		url = url.substr(0, url.indexOf('/'));
+
+		if (whitelist.indexOf(url) >= 0) {
+			// reset whitelisted tabs.
+			whitelistedTab = [];
+			whitelistedTab.push( details.tabId );
+		}
+	}
+}
+
 // initialization //////////////////////////////////////////////////////////////
+
+// storage.set({'settings': {whitelist: ['gmail.com', 'github.com']}});
+// load whitelist
+storage.get(
+	'settings',
+	function(o) {
+		if (!o) {
+			return;
+		}
+
+		whitelist = o.settings.whitelist;
+	}
+);
 
 // TODO filter out known fingerprinters
 //chrome.webRequest.onBeforeRequest.addListener(
@@ -204,7 +235,15 @@ function onNavigation(details) {
 chrome.webRequest.onBeforeRequest.addListener(
 	// we redirect to a blank script instead of simply cancelling the request
 	// because cancelling makes pages spin forever for some reason
-	function () { if (!ENABLED) { return { redirectUrl: 'data:text/javascript,' }; } },
+	function (details) {
+		if (whitelistedTab.indexOf(details.tabId) >= 0) {
+			return { redirectUrl: 'data:text/javascript,' };
+		}
+
+		if (!ENABLED) {
+			return { redirectUrl: 'data:text/javascript,' };
+		}
+	},
 	{ urls: ['chrome-extension://' + chrome.runtime.id + '/js/builds/injected.min.js'] },
 	["blocking"]
 );
@@ -222,6 +261,8 @@ chrome.runtime.onMessage.addListener(onMessage);
 chrome.tabs.onRemoved.addListener(tabData.clear);
 
 chrome.webNavigation.onCommitted.addListener(onNavigation);
+
+chrome.webNavigation.onBeforeNavigate.addListener(onBeforeNavigation);
 
 // see if we have any orphan data every five minutes
 // TODO switch to chrome.alarms?
